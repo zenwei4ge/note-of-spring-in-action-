@@ -1,0 +1,120 @@
+依赖注入（dependency injection DI）
+企业级javabean(Enterprise Java Bean EJB)
+JDO(Java Data Object)
+初创spring的目的是替代更加重量级的企业java技术
+spring提供了更轻量简单的编程模型
+简单老式java对象（plain old java object）
+J2EE(java 2 Enterprise Edition)
+为了降低java开发的复杂性，spring运用了四种关键策略
+        1.基于POJO的轻量性和最小侵入性编程
+        2.通过依赖注入和面向接口实现松耦合
+        3.基于切面和惯例进行声明式编程
+        4.通过切面和模板减少样板式代码
+侵入式编程：很多框架通过应用强迫继承它们的类或实现他们的接口导致框架与应用绑死，比如EJB的无状态会话bean
+spring不强迫你实现spring规范的接口或继承spring规范的类，一个类仍然是POJO，最多使用spring注解
+依赖注入：
+                package com.springinaction.knight;
+                public class DamselRescuingKnight implement Knight{
+                        private RescueDamselQuest quest;
+                        public DamselRescuingKnight(){
+                                this.quest=new RescueDamselQuest(); 
+                        }
+                        public embarkOnQuest(){
+                                quest.embark();
+                        }
+                }
+                DamselRescuingKnight类和RescueDamselQuest类紧密耦合
+                
+                package com.springinaction.knight;
+                public class BraveKnight implement Knight{
+                        private Quest quest;
+                        public BraveKnight(Quest quest){
+                                this.quest=quest; 
+                        }
+                        public embarkOnQuest(){
+                                quest.embark();
+                        }
+                }
+                BraveKnight没有和任何quest实现发生耦合，把探险任务作为构造器参数传入，即构造器注入
+                
+                 package com.springinaction.knight;
+                 import static org.mockito.Mockito.*;
+                 import org.junit.Test;
+                 
+                 public class BraveKnightTest{
+                        public void knightShouldEmbarkOnQuest(){
+                                Quest mockQuest = mock(Quest.class);
+                                BraveKnight knight=new BaraveKnight(mockQuest);
+                                Knight.embarkOnQuest();
+                                verify(mockQuest.times(1)).embark());
+                        }
+                 }
+                 使用mock框架Mockito去创建一个Quest接口的mock实现，通过构造器注入这个mockQuest，可通过框架验证embark（）方法只调用一次。
+装配：创建应用组件之间协作的行为
+        使用spring将SlayDragonQuest注入到BraveKnight中
+        <?xml version="1.0" encoding="UTF-8">
+        <beans xmls="http://www.springframework.org/schema/beans"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans.xsd'>
+                        
+                <bean id="knight" class="com.springinaction.knights.BraveKnight">
+                        <constructor-arg ref="quest" />
+                </bean>
+                
+                <bean id="quest" class="com.sprininaction.knights.SlayDragonQuest">
+                        <constructor-arg value="#(T(System).out)" />
+                <bean>
+          </beans>
+          
+          
+          spring提供了基于Java的配置，可作为XML的替代方案
+          
+          package com.springinaction.knights.config;
+          
+          import org.springframework.context.annotation.Bean;
+          import org.springframework.context.annotation.Configration;
+          
+          import com.springinaction.knights.BraveKnight;
+          import com.springinaction.knights.Knight;
+          import com.springinaction.knights.Quest;
+          import com.springinaction.knights.SlayDragonQuest;
+          
+          @Configuration
+          public class KnightConfig{
+                @Bean
+                public Knight knight(){
+                        return new BraveKnight(quest());
+                }
+                
+                @bean
+                public Quest quest(){
+                        return new SlayDragonQuest(System.out);
+                }
+          }
+          
+          
+          装载XML配置文件，把应用启动起来
+          Spring通过应用上下文（Application Context）装载bean定义并把它们组装
+          这里用ClassPathXmlApplicationContext作为应用上下文
+          
+          实例：加载包含Knight的Spring上下文
+          package com.springinaction.knights;
+          
+          import org.springframework.context.support.ClassPathXmlApplicationContext;
+          
+          public class KnightMain{
+                
+                public static void main(String[] args) throws Exception{
+                        ClassPathXmlApplicationContext context =
+                                new ClassPathXmlApplicationContext("META-INF/spring/knights.xml");
+                        Knight knight = context.getbean(Knight.class);
+                        knight.embarkOnQuest();
+                        context.close();
+                }
+          }
+          
+          
+          
+              
+                
